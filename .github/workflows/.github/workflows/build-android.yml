@@ -1,0 +1,35 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.5"
+  EXPORT_PRESET: "Android"
+  EXPORT_PATH: "build/android/bermuda-soccer-pro.apk"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:${GODOT_VERSION}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Godot templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+
+      - name: Export Android debug APK
+        run: |
+          mkdir -p "$(dirname "${EXPORT_PATH}")"
+          godot --headless --export-debug "${EXPORT_PRESET}" "${EXPORT_PATH}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ env.EXPORT_PATH }}
